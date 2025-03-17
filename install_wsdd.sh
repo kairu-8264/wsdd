@@ -4,7 +4,7 @@
 cd /usr/local/bin/
 
 # wsdd.pyをダウンロード (curlに変更)
-curl -o wsdd.py https://raw.githubusercontent.com/kairu-8264/wsdd/master/src/wsdd.py
+curl -fLo wsdd.py https://raw.githubusercontent.com/kairu-8264/wsdd/master/src/wsdd.py
 
 # wsdd.pyに実行権限を付与
 chmod 755 wsdd.py
