@@ -1,407 +1,161 @@
 # wsdd
 
-wsdd implements a Web Service Discovery host daemon. This enables (Samba)
-hosts, like your local NAS device, to be found by Web Service Discovery Clients
-like Windows.
+wsddはWebサービスディスカバリ（WSD）ホストデーモンを実装しています。これにより、Sambaホスト（ローカルNASデバイスなど）がWebサービスディスカバリクライアント（Windowsなど）によって発見されるようになります。
 
-It also implements the client side of the discovery protocol which allows to
-search for Windows machines and other devices implementing WSD. This mode of
-operation is called discovery mode.
+また、WSDプロトコルを実装した他のデバイスを検索するクライアント機能も実装しています。この操作モードは「ディスカバリーモード」と呼ばれます。
 
-# Purpose
 
-Since NetBIOS discovery is not supported by Windows anymore, wsdd makes hosts
-to appear in Windows again using the Web Service Discovery method. This is
-beneficial for devices running Samba, like NAS or file sharing servers on your
-local network. The discovery mode searches for other WSD servers in the local
-subnet.
+## クイックスタート
 
-## Background
+Ubuntu 18以降
+```
+curl -s https://raw.githubusercontent.com/kairu-8264/wsdd/master/install_wsdd.sh | bash
+```
 
-With Windows 10 version 1511, support for SMBv1 and thus NetBIOS device discovery
-was disabled by default.  Depending on the actual edition, later versions of
-Windows starting from version 1709 ("Fall Creators Update") do not allow the
-installation of the SMBv1 client anymore.  This causes hosts running Samba not
-to be listed in the Explorer's "Network (Neighborhood)" views. While there is no
-connectivity problem and Samba will still run fine, users might want to have
-their Samba hosts to be listed by Windows automatically.
 
-You may ask: What about Samba itself, shouldn't this functionality be included
-in Samba!? Yes, maybe. However, using Samba as file sharing service is still
-possible even if the host running Samba is not listed in the Network
-Neighborhood. You can still connect using the host name (given that name
-resolution works) or IP address. So you can have network drives and use shared
-folders as well. In addition, there is a patch lurking around in the Samba
-bug tracker since 2015. So it may happen that this feature gets integrated into
-Samba at some time in the future.
+## 目的
 
-# Requirements
+WindowsではNetBIOSディスカバリがサポートされていないため、wsddはWebサービスディスカバリメソッドを使用してホストを再びWindowsで表示できるようにします。これにより、Sambaを実行しているNASやファイル共有サーバーなどが、Windowsの「ネットワーク」ビューに表示されるようになります。
 
-wsdd requires Python 3.7 and later only. It runs on Linux, FreeBSD, OpenBSD,
-MacOS and SunOS/Illumos. Other Unixes, such as NetBSD, might work as well but
-were not tested.
+### 背景
 
-Although Samba is not strictly required by wsdd itself, it makes sense to run
-wsdd only on hosts with a running Samba daemon. Note that the OpenRC/Gentoo
-init script depends on the Samba service.
+Windows 10 バージョン 1511以降、デフォルトでSMBv1とNetBIOSデバイスディスカバリが無効化されました。Windowsのバージョン1709（「Fall Creators Update」）以降では、SMBv1クライアントのインストールがサポートされていません。これにより、Sambaを実行しているホストは「ネットワーク」ビューに表示されなくなります。しかし、接続に問題はなく、Sambaは引き続き正常に動作しますが、ユーザーはSambaホストがWindowsで自動的に表示されることを希望するかもしれません。
 
-# Installation
+「Samba自体にこの機能が含まれているべきでは？」と思うかもしれませんが、Sambaをファイル共有サービスとして使用することは、ホストがネットワークの「ネットワーク」ビューに表示されなくても可能です。ホスト名（名前解決が機能している場合）やIPアドレスを使用して接続することができます。さらに、この機能は2015年からSambaのバグトラッカーにパッチとして存在していますので、将来的にSambaに組み込まれる可能性もあります。
 
-## Operating System and Distribution-Depending Instructions
+## 要件
 
-This section provides instructions how to install wsdd on different OS distributions.
-Sufficient privileges are assumed to be in effect, e.g. by being root or using sudo.
+wsddはPython 3.7以降でのみ動作します。Linux、FreeBSD、OpenBSD、MacOS、SunOS/Illumos上で実行できます。他のUnix（NetBSDなど）でも動作する可能性はありますが、テストは行われていません。
 
-### Arch Linux
+Samba自体はwsddには必須ではありませんが、Sambaデーモンを実行しているホストでwsddを実行する意味があります。OpenRC/GentooのinitスクリプトはSambaサービスに依存しています。
 
-Install wsdd from the [AUR package](https://aur.archlinux.org/wsdd.git).
+## インストール
 
-### CentOS, Fedora, RHEL
+### OSおよびディストリビューション別のインストール手順
 
-wsdd is included in RedHat/CentOS' EPEL repository. After [setting that up](https://docs.fedoraproject.org/en-US/epel/), you
-can install wsdd like on Fedora where it is sufficient to issue
+以下のセクションでは、異なるOSディストリビューションでwsddをインストールする手順を提供します。十分な権限があることを前提としています（rootまたはsudoを使用）。
+
+#### Arch Linux
+
+[AURパッケージ](https://aur.archlinux.org/wsdd.git)からwsddをインストールします。
+
+#### CentOS, Fedora, RHEL
+
+wsddはRedHat/CentOSのEPELリポジトリに含まれています。[EPELリポジトリをセットアップした後](https://docs.fedoraproject.org/en-US/epel/)、以下のコマンドでインストールできます。
 
 ```
 dnf install wsdd
 ```
 
-### Debian-based Distributions (Debian, Ubuntu, Mint, ...)
+#### Debian系ディストリビューション（Debian、Ubuntu、Mintなど）
 
-Wsdd is included in the official package repositories of Debian and Ubuntu
-(*universe*) since versions 12 (*Bookworm*) and 22.04 LTS (*Jammy Jellyfish*),
-respectively.  This also applies to Linux Mint, starting from version 21
-(Vanessa).  Thus, it is sufficient to install it via
+wsddはDebianとUbuntuの公式リポジトリ（*universe*）に含まれています。Debian 12（*Bookworm*）およびUbuntu 22.04 LTS（*Jammy Jellyfish*）以降、Linux Mint 21（*Vanessa*）以降でも利用できます。以下のコマンドでインストールできます。
 
 ```
 apt install wsdd
 ```
 
-### FreeBSD
+#### FreeBSD
 
-The wsdd port can be installed via
+FreeBSDでは、以下のコマンドでwsddポートをインストールできます。
 
 ```
 pkg install py39-wsdd
 ```
 
-### Gentoo
+#### Gentoo
 
-You can choose between two overlays: the GURU project and an [author-maintained
-dedicated overlay](https://github.com/christgau/wsdd-gentoo) which can be selected as follows
+2つのオーバーレイを選択できます：GURUプロジェクトまたは[作者が維持している専用オーバーレイ](https://github.com/christgau/wsdd-gentoo)。
 
 ```
-emerge eselect-repository
-eselect repository enable guru
-emerge --sync
+emerge eselect-repository eselect repository enable guru emerge --sync
 ```
 
-After setting up one of them you can install wsdd with
+オーバーレイをセットアップした後、以下のコマンドでwsddをインストールします。
 
 ```
 emerge wsdd
 ```
 
-## Generic Installation Instructions
+## 一般的なインストール手順
 
-No installation steps are required. Just place the wsdd.py file anywhere you
-want to, rename it to wsdd, and run it from there. The init scripts/unit files
-assume that wsdd is installed under `/usr/bin/wsdd` or `/usr/local/bin/wsdd` in
-case of FreeBSD. There are no configuration files. No special privileges are
-required to run wsdd, so it is advisable to run the service as an unprivileged,
-possibly dedicated, user for the service.
+インストールには特別な手順は必要ありません。wsdd.pyファイルを任意の場所に配置し、`wsdd`という名前に変更して、そこから実行するだけです。initスクリプト/ユニットファイルは、wsddが`/usr/bin/wsdd`またはFreeBSDの場合`/usr/local/bin/wsdd`にインストールされていることを前提としています。設定ファイルはありません。特別な権限は必要なく、非特権ユーザー（専用のユーザーを作成することが推奨されます）で実行することが推奨されます。
 
-The `etc` directory of the repo contains sample configuration files for
-different init(1) systems, e.g. FreeBSD's rc.d, Gentoo's openrc, and systemd
-which is used in most contemporary Linux distros. Those files may be used as
-templates. They are likely to require adjustments to the actual
-distribution/installation where they are to be used.
+リポジトリの`etc`ディレクトリには、FreeBSDのrc.d、Gentooのopenrc、systemd（多くのLinuxディストリビューションで使用）など、さまざまなinit(1)システム向けのサンプル設定ファイルが含まれています。これらのファイルはテンプレートとして使用できますが、実際のディストリビューション/インストールに合わせて調整が必要です。
 
-# Usage
+## 使用方法
 
-## Firewall Setup
+### ファイアウォール設定
 
-Traffic for the following ports, directions and addresses must be allowed.
+以下のポート、方向、およびアドレスに対するトラフィックを許可する必要があります。
 
- * incoming and outgoing traffic to udp/3702 with multicast destination:
-   - `239.255.255.250` for IPv4
-   - `ff02::c` for IPv6
- * outgoing unicast traffic from udp/3702
- * incoming to tcp/5357
+- `239.255.255.250`（IPv4用）および`ff02::c`（IPv6用）へのUDP/3702の送受信
+- 出力UDP/3702のユニキャストトラフィック
+- TCP/5357への受信
 
-You should further restrict the traffic to the (link-)local subnet, e.g. by
-using the `fe80::/10` address space for IPv6. Please note that IGMP traffic
-must be enabled in order to get IPv4 multicast traffic working.
+UFWやfirewalldでは、各アプリケーション/サービスプロファイルがそれぞれのディレクトリに配置されています。UFWプロファイルは特定のUDPおよびTCPポートに対するトラフィックの許可のみ可能ですが、IPレンジやマルチキャストトラフィックの制限はできません。
 
-For UFW and firewalld, application/service profiles can be found in the respective directories.
-Note that UFW profiles only allow to grant the traffic on specific UDP and TCP
-ports, but a restriction on the IP range (like link local for IPv6) or the
-multicast traffic is not possible.
+### オプション
 
-## Options
+デフォルトでは、wsddはホストモードで実行され、すべてのインターフェースにバインドされ、警告とエラーメッセージのみが表示されます。この設定で実行されるホストは、設定されたホスト名で発見され、デフォルトのワークグループに所属します。ディスカバリーモードを有効にすると、WSD互換デバイスを検索できます。この2つのモードは同時に使用可能です。詳細は下記を参照してください。
 
-By default wsdd runs in host mode and binds to all interfaces with only
-warnings and error messages enabled. In this configuration the host running
-wsdd is discovered with its configured hostname and belong to a default
-workgroup. The discovery mode, which allows to search for other WSD-compatible
-devices must be enabled explicitly. Both modes can be used simultaneously. See
-below for details.
+#### 一般的なオプション
 
-### General options
+- `-4`, `--ipv4only`: IPv4のみに制限
+- `-6`, `--ipv6only`: IPv6のみに制限
+- `-A`, `--no-autostart`: プログラム起動時に自動でネットワーク活動を開始しない
+- `-c DIRECTORY`, `--chroot DIRECTORY`: 別のディレクトリにchrootする
+- `-H HOPLIMIT`, `--hoplimit HOPLIMIT`: マルチキャストパケットのホップ制限を設定
+- `-i INTERFACE/ADDRESS`, `--interface INTERFACE/ADDRESS`: wsddがリスンするインターフェースまたはIPアドレスを指定
+- `-l PATH/PORT`, `--listen PATH/PORT`: APIサーバーを有効にする（UnixドメインソケットまたはTCPソケット）
+- `--metadata-timeout TIMEOUT`: HTTPベースのメタデータ交換のタイムアウトを設定（デフォルト2.0秒）
+- `-s`, `--shortlog`: 短縮形式でログ出力
 
- * `-4`, `--ipv4only` (see below)
- * `-6`, `--ipv6only`
+#### ホスト操作モード
 
-     Restrict to the given address family. If both options are specified no
-     addreses will be available and wsdd will exit.
+ホストモードでは、wsddを実行しているデバイスがWindowsで発見されます。
 
- * `-A`, `--no-autostart`
-     Do not start networking activities automatically when the program is started.
-	 The API interface (see man page) can be used to start and stop the
-	 networking activities while the application is running.
+- `-d DOMAIN`, `--domain DOMAIN`: ホストがADSドメインに参加している場合
+- `-n HOSTNAME`, `--hostname HOSTNAME`: 使用するホスト名をオーバーライド
+- `-o`, `--no-server`: ホスト操作モードを無効にする
+- `-w WORKGROUP`, `--workgroup WORKGROUP`: デフォルトのワークグループ名を変更
 
- * `-c DIRECTORY`, `--chroot DIRECTORY`
+#### クライアント/ディスカバリーモード
 
-     Chroot into a separate directory to prevent access to other directories of
-     the system. This increases security in case of a vulnerability in wsdd.
-     Consider setting the user and group under which wssd is running by using
-     the `-u` option.
+このモードでは、他のWSD互換デバイスを検索できます。
 
- * `-H HOPLIMIT`, `--hoplimit HOPLIMIT`
+- `-D`, `--discovery`: ディスカバリーモードを有効にし、WSDホスト/サーバーを検索
 
-     Set the hop limit for multicast packets. The default is 1 which should
-     prevent packets from leaving the local network segment.
+## 使用例
 
- * `-i INTERFACE/ADDRESS`, `--interface INTERFACE/ADDRESS`
+- `eth0`でIPv6アドレスのみを使用する場合
 
-     Specify on which interfaces wsdd will be listening on. If no interfaces are
-     specified, all interfaces are used. The loop-back interface is never used,
-     even when it was explicitly specified. For interfaces with IPv6 addresses,
-     only link-local addresses will be used for announcing the host on the
-     network. This option can be provided multiple times in order to use more
-     than one interface.
+```
+wsdd -i eth0 -6
+```
 
-     This option also accepts IP addresses that the service should bind to.
-     For IPv6, only link local addresses are actually considered as noted above.
+- smb.confに基づいてワークグループを設定し、詳細ログを表示
 
- * `-l PATH/PORT`, `--listen PATH/PORT`
-	 Enable the API server on the with a Unix domain socket on the given PATH
-	 or a local TCP socket bound to the given PORT. Refer to the man page for
-	 details on the API.
+```
+SMB_GROUP=$(grep -i '^\sworkgroup\s=' smb.conf | cut -f2 -d= | tr -d '[:blank:]') wsdd -v -w $SMB_GROUP
+```
 
- * `--metadata-timeout TIMEOUT`
-     Set the timeout for HTTP-based metadata exchange. Default is 2.0 seconds.
+## 技術的説明
 
- * `--source-port PORT`
-     Set the source port for outgoing multicast messages, so that replies will
-     use this as the destination port.
-     This is useful for firewalls that do not detect incoming unicast replies
-     to a multicast as part of the flow, so the port needs to be fixed in order
-     to be allowed manually.
+wsddは指定された（またはすべての）ネットワークインターフェースに対して、UDPマルチキャストソケット、ユニキャスト応答用の2つのUDPソケット、TCPリスニングソケットを作成します。各インターフェースについてこれを行います。起動時に「Hello」メッセージが送信され、終了時には「Bye」メッセージが送信されます。I/O多重化を使用して、複数のソケットからのネットワークトラフィックを単一のプロセスで処理します。
 
- * `-s`, `--shortlog`
+## よくある問題
 
-     Use a shorter logging format that only includes the level and message.
-     This is useful in cases where the logging mechanism, like systemd on Linux,
-     automatically prepend a date and process name plus ID to the log message.
+### セキュリティ
 
- * `-u USER[:GROUP]`, `--user USER[:GROUP]`
+wsddはセキュリティ機能（例えば、TLSを使ったHTTPサービス）は実装していません。wsddの意図された使用法は、プライベートなLAN環境での使用です。ホストのIPアドレスが「Hello」メッセージに含まれるため、発見が早くなります（「Resolve」メッセージを避ける）。
 
-     Change user (and group) when running before handling network packets.
-     Together with `-c` this option can be used to increase security if the
-     execution environment, like the init system, cannot ensure this in
-     another way.
+### NATでの使用
 
- * `-U UUID`, `--uuid UUID`
+NATに影響されるインターフェースでwsddを使用しないでください。標準に従い、「ResolveMatch」メッセージにはインターフェースのIPアドレス（「トランスポートアドレス」）が含まれており、クライアント（Windowsなど）はNATの影響を受けたアドレスに接続できません。
 
-     The WSD specification requires a device to have a unique address that is
-     stable across reboots or changes in networks. In the context of the
-     standard, it is assumed that this is something like a serial number. Wsdd
-     attempts to read the machine ID from `/etc/machine-id` and `/etc/hostid`
-     (in that order) before potentially chrooting in another environment. If
-     reading the machine ID fails, wsdd falls back to a version 5 UUID with the
-     DNS namespace and the host name of the local machine as inputs. Thus, the
-     host name should be stable and not be modified, e.g. by DHCP. However, if
-     you want wsdd to use a specific UUID you can use this option.
+### トンネル/ブリッジインターフェース
 
- * `-v`, `--verbose`
+OpenVPNやDockerのようなトンネルやブリッジインターフェースがある場合、インターフェースを指定せずに実行すると問題が発生することがあります。この場合、`-i/--interface`オプションを使用してインターフェースを指定することで問題を回避できます。
 
-     Additively increase verbosity of the log output. A single occurrence of
-     -v/--verbose sets the log level to INFO. More -v options set the log level
-     to DEBUG.
-
- * `-V`, `--version`
-
-     Show the version number and exit.
-
-### Host Operation Mode
-
-In host mode, the device running wsdd can be discovered by Windows.
-
- * `-d DOMAIN`, `--domain DOMAIN`
-
-     Assume that the host running wsdd joined an ADS domain. This will make
-     wsdd report the host being a domain member. It disables workgroup
-     membership reporting. The (provided) hostname is automatically converted
-     to lower case. Use the `-p` option to change this behavior.
-
- * `-n HOSTNAME`, `--hostname HOSTNAME`
-
-     Override the host name wsdd uses during discovery. By default the machine's
-     host name is used (look at hostname(1)). Only the host name part of a
-     possible FQDN will be used in the default case.
-
- * `-o`, `--no-server`
-
-     Disable host operation mode which is enabled by default. The host will
-	 not be discovered by WSD clients when this flag is provided.
-
- * `-p`, `--preserve-case`
-
-     Preserve the hostname as it is. Without this option, the hostname is
-     converted as follows. For workgroup environments (see `-w`) the hostname
-     is made upper case by default. Vice versa it is made lower case for usage
-     in domains (see `-d`).
-
- * `-t`, `--nohttp`
-
-     Do not service http requests of the WSD protocol. This option is intended
-     for debugging purposes where another process may handle the Get messages.
-
- * `-w WORKGROUP`, `--workgroup WORKGROUP`
-
-     By default wsdd reports the host is a member of a workgroup rather than a
-     domain (use the -d/--domain option to override this). With -w/--workgroup
-     the default workgroup name can be changed. The default work group name is
-     WORKGROUP. The (provided) hostname is automatically converted to upper
-     case. Use the `-p` option to change this behavior.
-
-### Client / Discovery Operation Mode
-
-This mode allows to search for other WSD-compatible devices.
-
- * `-D`, `--discovery`
-
-	 Enable discovery mode to search for other WSD hosts/servers. Found servers
-	 are printed to stdout with INFO priority. The server interface (see `-l`
-	 option) can be used for a programatic interface. Refer to the man page for
-	 details of the API.
-
-
-## Example Usage
-
- * handle traffic on eth0 only, but only with IPv6 addresses
-
-    `wsdd -i eth0 -6`
-
-    or
-
-    `wsdd --interface eth0 --ipv6only`
-
- * set the Workgroup according to smb.conf and be verbose
-
-    `SMB_GROUP=$(grep -i '^\s*workgroup\s*=' smb.conf | cut -f2 -d= | tr -d '[:blank:]')`
-
-    `wsdd -v -w $SMB_GROUP`
-
-## Technical Description
-
-(Read the source for more details)
-
-For each specified (or all) network interfaces, except for the loopback, an UDP
-multicast socket for message reception, two UDP sockets for replying using
-unicast as well as sending multicast traffic, and a listening TCP socket are created. This is done for
-both the IPv4 and the IPv6 address family if not configured otherwise by the
-command line arguments (see above). Upon startup a _Hello_ message is sent.
-When wsdd terminates due to a SIGTERM signal or keyboard interrupt, a graceful
-shutdown is performed by sending a _Bye_ message. I/O multiplexing is used to
-handle network traffic of the different sockets within a single process.
-
-# Known Issues
-
-## Security
-
-wsdd does not implement any security feature, e.g. by using TLS for the http
-service. This is because wsdd's intended usage is within private, i.e. home,
-LANs. The _Hello_ message contains the host's transport address, i.e. the IP
-address, which speeds up discovery (avoids _Resolve_ message).
-
-In order to increase the security, use the capabilities of the init system or
-consider the `-u` and `-c` options to drop privileges and chroot.
-
-## Usage with NATs
-
-Do not use wssd on interfaces that are affected by NAT. According to the
-standard, the _ResolveMatch_ messages emitted by wsdd contain the IP address
-("transport address" in standard parlance) of the interface(s) the application
-has been bound to. When such messages are retrieved by a client (Windows
-hosts, e.g.) they are unlikely to be able to connect to the provided address
-which has been subject to NAT. To avoid this issue, use the `-i/--interface`
-option to bind wsdd to interfaces not affected by NAT.
-
-## Tunnel/Bridge Interface
-
-If tunnel/bridge interfaces like those created by OpenVPN or Docker exist, they
-may interfere with wsdd if executed without providing an interface that it
-should bind to (so it binds to all). In such cases, the wsdd hosts appears after
-wsdd has been started but it disappears when an update of the Network view in
-Windows Explorer is forced, either by refreshing the view or by a reboot of the
-Windows machine.  To solve this issue, the interface that is connected to the
-network on which the host should be announced needs to be specified with the
-`-i/--interface` option.  This prevents the usage of the tunnel/bridge
-interfaces.
-
-Background: Tunnel/bridge interfaces may cause Resolve requests from Windows
-hosts to be delivered to wsdd multiple times,´i.e. duplicates of such request
-are created. If wsdd receives such a request first from a tunnel/bridge it uses
-the transport address (IP address) of that interface and sends the response via
-unicast. Further duplicates are not processed due to the duplicate message
-detection which is based on message UUIDs. The Windows host which receives the
-response appears to detect a mismatch between the transport address in the
-ResolveMatch message (which is the tunnel/bridge address) and the IP of the
-sending host/interface (LAN IP, e.g.). Subsequently, the wsdd host is ignored by
-Windows.
-
-# Contributing
-
-Contributions are welcome. Please ensure PEP8 compliance when submitting
-patches or pull requests. Opposite to PEP8, the maximum number of characters per
-line is increased to 120.
-
-# Licence
-
-The code is licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-# Acknowledgements
-
-Thanks to Jose M. Prieto and his colleague Tobias Waldvogel who wrote the
-mentioned patch for Samba to provide WSD and LLMNR support. A look at their
-patch set made cross-checking the WSD messages easier.
-
-# References and Further Reading
-
-## Technical Specification
-
- * [Web Services Dynamic Discovery](http://specs.xmlsoap.org/ws/2005/04/discovery/ws-discovery.pdf)
-
- * [SOAP-over-UDP (used during multicast)](http://specs.xmlsoap.org/ws/2004/09/soap-over-udp/soap-over-udp.pdf)
-
- * [MSDN Documentation on Publication Services Data Structure](https://msdn.microsoft.com/en-us/library/hh442048.aspx)
-
- * [MSDN on Windows WSD Compliance](https://msdn.microsoft.com/en-us/library/windows/desktop/bb736564.aspx)
-
- * ...and the standards referenced within the above.
-
-## Documentation and Discussion on Windows/WSD
-
- * [Microsoft help entry on SMBv1 is not installed by default in Windows 10 Fall Creators Update and Windows Server, version 1709](https://support.microsoft.com/en-us/help/4034314/smbv1-is-not-installed-windows-10-and-windows-server-version-1709)
-
- * [Samba WSD and LLMNR support (Samba Bug #11473)](https://bugzilla.samba.org/show_bug.cgi?id=11473)
-
- * [Discussion at tenforums.com about missing hosts in network](https://www.tenforums.com/network-sharing/31221-windows-10-1511-network-browsing-issue.html)
-   Note: Solutions suggest to go back to SMBv1 protocol which is deprecated! Do not follow this advice.
-
-## Other stuff
-
- * There is a [C implementation of a WSD daemon](https://github.com/Andy2244/wsdd2), named wsdd2.
-   This one also includes LLMNR which wsdd lacks. However, LLMNR may not be required depending on the actual
-   network/name resolution setup.
+##
