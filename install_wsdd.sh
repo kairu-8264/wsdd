@@ -30,6 +30,6 @@ EOF'
 # サービスのリロードと有効化
 systemctl daemon-reload
 systemctl enable wsdd
-systemctl start wsdd
+systemctl restart wsdd
 
 echo "wsddのインストールと設定が完了しました。"
