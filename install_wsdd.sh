@@ -21,7 +21,7 @@ After=network.target network-online.target multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/wsdd -d kairunroom
+ExecStart=/usr/local/bin/wsdd -d WORKGROUP
 
 [Install]
 WantedBy=multi-user.target
