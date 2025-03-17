@@ -4,16 +4,16 @@
 cd /usr/local/bin/
 
 # wsdd.pyをダウンロード
-sudo wget https://raw.githubusercontent.com/kairu-8264/wsdd/master/src/wsdd.py
+wget https://raw.githubusercontent.com/kairu-8264/wsdd/master/src/wsdd.py
 
 # wsdd.pyに実行権限を付与
-sudo chmod 755 wsdd.py
+chmod 755 wsdd.py
 
 # シンボリックリンクの作成
-sudo ln -sf wsdd.py wsdd
+ln -sf wsdd.py wsdd
 
 # サービスファイルの作成
-sudo bash -c 'cat > /etc/systemd/system/wsdd.service <<EOF
+bash -c 'cat > /etc/systemd/system/wsdd.service <<EOF
 [Unit]
 Description=Web Services Dynamic Discovery host daemon
 Requires=network-online.target
@@ -28,8 +28,8 @@ WantedBy=multi-user.target
 EOF'
 
 # サービスのリロードと有効化
-sudo systemctl daemon-reload
-sudo systemctl enable wsdd
-sudo systemctl start wsdd
+systemctl daemon-reload
+systemctl enable wsdd
+systemctl start wsdd
 
 echo "wsddのインストールと設定が完了しました。"
